@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Focus">
+<link rel="manifest" href="manifest.json">
+<title>Focus — Pomodoro</title>
+<style>
+:root{
+ --bg:#f5f5f7;--card:rgba(255,255,255,.72);--text:#1d1d1f;--muted:#86868b;
+ --line:rgba(0,0,0,.08);--accent:#ff453a;--accent2:#ff9f0a;--button:#1d1d1f;
+ --shadow:0 24px 70px rgba(0,0,0,.09)
+}
+[data-theme="dark"]{
+ --bg:#000;--card:rgba(28,28,30,.76);--text:#f5f5f7;--muted:#98989d;
+ --line:rgba(255,255,255,.12);--button:#f5f5f7;--shadow:0 24px 70px rgba(0,0,0,.35)
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#fff 0,var(--bg) 48%);
+color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
+-webkit-font-smoothing:antialiased}
+[data-theme="dark"] body{background:radial-gradient(circle at 50% 0,#252525 0,#000 55%)}
+.wrap{width:min(620px,92%);margin:auto;padding:24px 0 42px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.brand{font-size:18px;font-weight:700;letter-spacing:-.3px}.brand span{font-size:21px}
+.icon{width:40px;height:40px;border:1px solid var(--line);background:var(--card);border-radius:50%;cursor:pointer;color:var(--text);font-size:17px}
+.glass{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-radius:32px;padding:28px}
+.mode{text-align:center;color:var(--muted);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin:3px 0 15px}
+.ring{width:min(330px,70vw);aspect-ratio:1;margin:auto;position:relative;display:grid;place-items:center}
+.ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.track{fill:none;stroke:var(--line);stroke-width:8}
+.arc{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .35s linear}
+.time{font-size:clamp(70px,17vw,108px);font-weight:700;letter-spacing:-5px;font-variant-numeric:tabular-nums}
+.status{text-align:center;color:var(--muted);font-size:14px;margin-top:-7px}
+.buttons{display:flex;justify-content:center;gap:10px;margin:26px 0 0}
+button{font:inherit;border:0;cursor:pointer}
+.mainbtn{background:var(--button);color:var(--bg);border-radius:16px;padding:14px 34px;font-weight:700;font-size:17px;min-width:145px}
+.smallbtn{width:48px;height:48px;border-radius:16px;background:rgba(128,128,128,.12);color:var(--text);font-size:18px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+.stat{padding:16px;border:1px solid var(--line);border-radius:20px;background:rgba(128,128,128,.06)}
+.k{font-size:12px;color:var(--muted);margin-bottom:5px}.v{font-size:20px;font-weight:700}
+.task{margin-top:22px}.task input{width:100%;border:1px solid var(--line);background:rgba(128,128,128,.07);color:var(--text);border-radius:16px;padding:14px 16px;font-size:16px;outline:none}
+.task input::placeholder{color:var(--muted)}
+.goal{margin-top:18px}.goalhead{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
+.bar{height:8px;background:rgba(128,128,128,.14);border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .3s}
+details{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}summary{cursor:pointer;font-size:14px;font-weight:650}
+.settings{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:15px}
+.settings label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px}.settings input{width:100%;padding:10px;border:1px solid var(--line);border-radius:11px;background:rgba(128,128,128,.07);color:var(--text)}
+.tip{text-align:center;color:var(--muted);font-size:12px;line-height:1.5;margin-top:20px}
+@media(max-width:520px){.glass{padding:22px 16px;border-radius:27px}.settings{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span>🍅</span> Focus</div>
+    <button class="icon" id="theme" aria-label="Toggle appearance">☼</button>
+  </div>
+  <section class="glass">
+    <div class="mode" id="mode">Focus</div>
+    <div class="ring">
+      <svg viewBox="0 0 220 220" aria-hidden="true">
+        <circle class="track" cx="110" cy="110" r="99"/>
+        <circle class="arc" id="arc" cx="110" cy="110" r="99"/>
+      </svg>
+      <div class="time" id="time">25:00</div>
+    </div>
+    <div class="status" id="status">Ready when you are.</div>
+    <div class="buttons">
+      <button class="smallbtn" id="reset" aria-label="Reset">↺</button>
+      <button class="mainbtn" id="start">Start</button>
+      <button class="smallbtn" id="skip" aria-label="Skip">›</button>
+    </div>
+    <div class="meta">
+      <div class="stat"><div class="k">Round</div><div class="v"><span id="round">1</span> / 4</div></div>
+      <div class="stat"><div class="k">Completed today</div><div class="v" id="completed">0</div></div>
+    </div>
+    <div class="task"><input id="task" placeholder="What are you working on?" autocomplete="off"></div>
+    <div class="goal">
+      <div class="goalhead"><span>Daily goal</span><span><b id="goalCount">0</b> / <span id="goal">8</span> Pomodoros</span></div>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+    </div>
+    <details>
+      <summary>Timer settings</summary>
+      <div class="settings">
+        <div><label>Focus</label><input id="focus" type="number" min="1" value="25"></div>
+        <div><label>Short break</label><input id="short" type="number" min="1" value="5"></div>
+        <div><label>Long break</label><input id="long" type="number" min="1" value="15"></div>
+        <div><label>Daily goal</label><input id="goalInput" type="number" min="1" value="8"></div>
+      </div>
+    </details>
+  </section>
+  <div class="tip">25 min focus · 5 min short break · 15 min long break after 4 focus sessions</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let mode="focus",round=1,running=false,remaining=1500,total=1500,timer=null;
+const key="focusCompleted",themeKey="focusTheme";
+let completed=Number(localStorage.getItem(key)||0);
+$("completed").textContent=completed;$("goalCount").textContent=completed;
+function n(id,d){let x=parseInt($(id).value,10);return Number.isFinite(x)&&x>0?x:d}
+function stage(m,r=round){mode=m;round=r;let x=m==="focus"?n("focus",25):m==="short"?n("short",5):n("long",15);remaining=total=x*60;running=false;clearInterval(timer);timer=null;draw()}
+function draw(){
+ let m=String(Math.floor(remaining/60)).padStart(2,"0"),s=String(remaining%60).padStart(2,"0");
+ $("time").textContent=m+":"+s;$("round").textContent=round;$("start").textContent=running?"Pause":"Start";
+ $("mode").textContent=mode==="focus"?"Focus":mode==="short"?"Short Break":"Long Break";
+ $("status").textContent=running?(mode==="focus"?"Stay focused.":"Take a breather."):"Ready when you are.";
+ let p=1-remaining/total;let c=2*Math.PI*99;$("arc").style.strokeDasharray=c;$("arc").style.strokeDashoffset=c*(1-p);
+ $("fill").style.width=Math.min(100,completed/n("goalInput",8)*100)+"%";$("goal").textContent=n("goalInput",8);$("goalCount").textContent=completed;
+ document.title=m+":"+s+" · Focus";
+}
+function sound(){try{let C=AudioContext||webkitAudioContext,c=new C(),o=c.createOscillator(),g=c.createGain();o.frequency.value=740;g.gain.value=.06;o.connect(g);g.connect(c.destination);o.start();setTimeout(()=>o.stop(),220)}catch(e){}}
+function finish(){
+ sound();
+ if(mode==="focus"){completed++;localStorage.setItem(key,completed);if(round===4)stage("long",1);else stage("short",round)}
+ else if(mode==="short")stage("focus",round+1); else stage("focus",1);
+}
+function tick(){if(remaining<=1){remaining=0;draw();finish()}else{remaining--;draw()}}
+$("start").onclick=()=>{if(running){running=false;clearInterval(timer);timer=null;draw()}else{running=true;draw();timer=setInterval(tick,1000)}};
+$("reset").onclick=()=>stage("focus",1);$("skip").onclick=finish;
+["focus","short","long","goalInput"].forEach(id=>$(id).addEventListener("change",()=>{if(!running)stage(mode,round)}));
+$("task").value=localStorage.getItem("focusTask")||"";
+$("task").addEventListener("input",e=>localStorage.setItem("focusTask",e.target.value));
+function setTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem(themeKey,t);$("theme").textContent=t==="dark"?"☀":"☼"}
+setTheme(localStorage.getItem(themeKey)||"light");$("theme").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");draw();
+</script>
+</body></html>
